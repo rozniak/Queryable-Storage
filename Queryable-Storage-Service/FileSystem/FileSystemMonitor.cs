@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Oddmatics.PowerUser.Windows.QueryableStorage.Database;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,18 +7,32 @@ using System.Text;
 
 namespace Oddmatics.PowerUser.Windows.QueryableStorage.FileSystem
 {
+    /// <summary>
+    /// Represents the file system monitoring subsystem.
+    /// </summary>
     internal sealed class FileSystemMonitor : IDisposable
     {
+        /// <summary>
+        /// (TEMPORARY) The text document log path.
+        /// </summary>
         private const string LogPath = @"C:\fswatch.log";
 
 
+        /// <summary>
+        /// The active database connection.
+        /// </summary>
+        private IDatabaseConnection DatabaseConnection;
+        
+        /// <summary>
+        /// The actively monitored directories and their watchers.
+        /// </summary>
         private Dictionary<string, FileSystemWatcher> Watchers;
 
 
         /// <summary>
         /// Initializes a new instance of the FileSystemMonitor class.
         /// </summary>
-        public FileSystemMonitor()
+        public FileSystemMonitor(IDatabaseConnection dbConnection)
         {
             Watchers = new Dictionary<string, FileSystemWatcher>();
         }

@@ -17,9 +17,6 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage
     /// </summary>
     internal partial class ServiceMain : ServiceBase
     {
-        private const string TestDirectory = @"C:\Users\Rory\qrystor";
-
-
         /// <summary>
         /// The configurations for this service.
         /// </summary>
@@ -69,9 +66,7 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage
 
             // Set up the file system monitor
             //
-            FileSystemMonitor = new FileSystemMonitor();
-
-            FileSystemMonitor.AddMonitoredPath(TestDirectory);
+            FileSystemMonitor = new FileSystemMonitor(DatabaseConnection);
         }
 
         /// <summary>
