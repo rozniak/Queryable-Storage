@@ -147,7 +147,7 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
                 fieldsStr.Add(mysqlField.Table + "." + mysqlField.Name);
             }
 
-            return new DatabaseResults(fieldsStr.AsReadOnly, )
+            return new DatabaseResults(fieldsStr.AsReadOnly(), rows);
         }
 
         /// <summary>
