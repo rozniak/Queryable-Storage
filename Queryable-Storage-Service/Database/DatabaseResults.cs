@@ -22,18 +22,26 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database
         public ReadOnlyCollection<ReadOnlyCollection<string>> Rows { get; private set; }
 
 
-        public static readonly DatabaseResults Empty; // TODO: Implement this
+        /// <summary>
+        /// Represents database results with no data.
+        /// </summary>
+        public static readonly DatabaseResults Empty = new DatabaseResults(
+            new List<string>().AsReadOnly(),
+            new List<ReadOnlyCollection<string>>().AsReadOnly()
+            );
 
 
         /// <summary>
         /// Initializes a new instance of the DatabaseResults class.
         /// </summary>
         /// <param name="resultSet">The result set as an array of arrays of strings.</param>
-        public DatabaseResults(string[][] resultSet)
+        public DatabaseResults(
+            ReadOnlyCollection<string> fields,
+            ReadOnlyCollection<ReadOnlyCollection<string>> rows
+            )
         {
-            //
-            // TODO: Implement this
-            //
+            Fields = fields;
+            Rows = rows;
         }
     }
 }

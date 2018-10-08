@@ -54,6 +54,7 @@
     <Compile Include="Database\IDatabaseConnection.cs" />
     <Compile Include="Database\DatabaseResults.cs" />
     <Compile Include="Database\Wrappers\MariaDb\MariaDbConnection.cs" />
+    <Compile Include="Database\Wrappers\MariaDb\MysqlField.cs" />
     <Compile Include="FileSystem\FileSystemMonitor.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -121,6 +122,35 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
         }
 
         /// <summary>
+        /// Constructs a <see cref="DatabaseResults"/> object usable outside of the
+        /// abstraction layer of this class.
+        /// </summary>
+        /// <param name="fields">
+        /// The collection of <see cref="MysqlField"/> objects.
+        /// </param>
+        /// <param name="rows">
+        /// The <see cref="string[][]"/> array representing rows.
+        /// </param>
+        /// <returns>
+        /// A <see cref="DatabaseResults"/> object that is usable outside of the
+        /// abstraction layer of this class.
+        /// </returns>
+        private DatabaseResults ConstructDatabaseResults(
+            IList<MysqlField> fields,
+            ReadOnlyCollection<ReadOnlyCollection<string>> rows
+            )
+        {
+            var fieldsStr = new List<string>();
+
+            foreach (MysqlField mysqlField in fields)
+            {
+                fieldsStr.Add(mysqlField.Table + "." + mysqlField.Name);
+            }
+
+            return new DatabaseResults(fieldsStr.AsReadOnly, )
+        }
+
+        /// <summary>
         /// Executes a query on the MariaDB server.
         /// </summary>
         /// <param name="query">The query statement.</param>
@@ -143,11 +173,50 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
         }
 
         /// <summary>
+        /// Fetches the field headings from a result set via its handle.
+        /// </summary>
+        /// <param name="hResultset">
+        /// An <see cref="IntPtr"/> handle to the result set.
+        /// </param>
+        /// <returns>
+        /// A read-only collection of <see cref="MysqlField"/> objects representing the
+        /// fields acquired from the resultset.
+        /// </returns>
+        private ReadOnlyCollection<MysqlField> FetchFields(IntPtr hResultset)
+        {
+            int sizeOfMysqlField = Marshal.SizeOf(typeof(MysqlField));
+
+            IntPtr arrayIndexPtr = MysqlFetchFields(hResultset);
+            int fieldCount = MysqlNumFields(hResultset);
+            var fields = new List<MysqlField>();
+
+            for (int i = 0; i < fieldCount; i++)
+            {
+                // Marshal a field and add it to our collection
+                //
+                fields.Add(
+                    (MysqlField)Marshal.PtrToStructure(arrayIndexPtr, typeof(MysqlField))
+                    );
+
+                // Shift the pointer in the array to the next structure
+                //
+                arrayIndexPtr = IntPtr.Add(
+                    arrayIndexPtr,
+                    sizeOfMysqlField - IntPtr.Size
+                    );
+            }
+
+            // Return a read only copy of our (now managed) field objects
+            //
+            return fields.AsReadOnly();
+        }
+
+        /// <summary>
         /// Fetches the results of the previous query into a
         /// <see cref="DatabaseResults"/> instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="DatabaseResults"/> instance containing the resultset of the
+        /// A <see cref="DatabaseResults"/> instance containing the result set of the
         /// last query.
         /// </returns>
         private DatabaseResults FetchResults()
@@ -156,10 +225,59 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
 
             int fieldCount = MysqlFieldCount(MysqlHandle);
 
+            // Check if there are any results, if there aren't respond with the empty
+            // object
+            //
             if (fieldCount == 0)
+                return DatabaseResults.Empty;
+
+            // We have results! Time to parse them from unmanaged memory into our neat
+            // object
+            //
+            IntPtr hResultset = MysqlStoreResult(MysqlHandle);
+
+            IList<MysqlField> fields = FetchFields(hResultset);
+            ReadOnlyCollection<ReadOnlyCollection<string>> rows = FetchRows(hResultset);
+
+            // Construct a DatabaseResults object that we can return
+            //
+            return ConstructDatabaseResults(fields, rows);
+        }
+
+        /// <summary>
+        /// Fetches the rows from a result set via its handle.
+        /// </summary>
+        /// <param name="hResultset">
+        /// An <see cref="IntPtr"/> handle to the result set.
+        /// </param>
+        /// <returns>
+        /// A <see cref="ReadOnlyCollection{T}"/> instance containing the row data.
+        /// </returns>
+        private ReadOnlyCollection<ReadOnlyCollection<string>> FetchRows(IntPtr hResultset)
+        {
+            int fieldCount = MysqlNumFields(hResultset);
+            IntPtr nextRow = IntPtr.Zero;
+            var rows = new List<ReadOnlyCollection<string>>();
+
+            while ((nextRow = MysqlFetchRow(hResultset)) != IntPtr.Zero)
             {
-                // TODO: Implement this
+                IntPtr fieldPtr = nextRow;
+                var fields = new List<string>();
+
+                for (int i = 0; i < fieldCount; i++)
+                {
+                    IntPtr szFieldValue = Marshal.ReadIntPtr(fieldPtr);
+                    string fieldValue = Marshal.PtrToStringAnsi(szFieldValue);
+
+                    fields.Add(fieldValue);
+
+                    fieldPtr = IntPtr.Add(fieldPtr, IntPtr.Size);
+                }
+
+                rows.Add(fields.AsReadOnly());
             }
+
+            return rows.AsReadOnly();
         }
 
         /// <summary>
@@ -324,14 +442,30 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
         private static extern IntPtr MysqlError(IntPtr mysql);
 
         /// <summary>
+        /// Fetches all fields from the result set as an array, each field contains a
+        /// definition for a column of the result set.
+        /// </summary>
+        /// <param name="result">
+        /// An <see cref="IntPtr"/> to a result set handle.
+        /// </param>
+        /// <returns>
+        /// All fields from the result set as an <see cref="IntPtr"/> to the first
+        /// index in the array.
+        /// </returns>
+        [DllImport(@"C:\Program Files\MariaDB 10.3\lib\libmariadb.dll", EntryPoint = "mysql_fetch_fields")]
+        private static extern IntPtr MysqlFetchFields(IntPtr result);
+
+        /// <summary>
         /// Fetches one row of data from the result set. Each subsequent call to this
         /// function will return the next row within the result set, or NULL if there
         /// are no more rows.
         /// </summary>
-        /// <param name="result">An <see cref="IntPtr"/> to a result set handle.</param>
+        /// <param name="result">
+        /// An <see cref="IntPtr"/> to a result set handle.
+        /// </param>
         /// <returns>
         /// One row of data from the result set as an <see cref="IntPtr"/> to the
-        /// first index of an array or char arrays.
+        /// first index of an array of char arrays.
         /// </returns>
         [DllImport(@"C:\Program Files\MariaDB 10.3\lib\libmariadb.dll", EntryPoint = "mysql_fetch_row")]
         private static extern IntPtr MysqlFetchRow(IntPtr result);
