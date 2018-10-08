@@ -89,6 +89,8 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
             // Try to access the database, if it doesn't exist, try to make it now
             //
             SafeQuery("USE ?n;", QueryableStorageDatabaseName);
+
+
         }
 
 
