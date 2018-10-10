@@ -61,11 +61,26 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to {
+        ///    &quot;db-connector&quot;: &quot;mariadb&quot;,
+        ///    &quot;db-host&quot;: &quot;127.0.0.1&quot;,
+        ///    &quot;db-port&quot;: &quot;3306&quot;,
+        ///    &quot;db-username&quot;: &quot;root&quot;,
+        ///    &quot;db-password&quot;: &quot;&quot;
+        ///}.
         /// </summary>
         internal static string DefaultConfigurations {
             get {
                 return ResourceManager.GetString("DefaultConfigurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string DefaultSchema {
+            get {
+                return ResourceManager.GetString("DefaultSchema", resourceCulture);
             }
         }
     }

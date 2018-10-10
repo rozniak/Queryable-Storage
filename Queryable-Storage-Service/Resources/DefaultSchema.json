@@ -1,0 +1,126 @@
+{
+    "database-name": "querystordb",
+    "tables": [
+        {
+            "table-name": "fs_file",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint",
+                    "size": 8
+                },
+                {
+                    "name": "path",
+                    "type": "string",
+                    "size": 260,
+                    "unique": true
+                },
+                {
+                    "name": "ntfs_id",
+                    "type": "uint",
+                    "size": 16,
+                    "unique": true
+                }
+            ],
+            "primary-key": [
+                "id"
+            ]
+        },
+        {
+            "table-name": "fs_watcher",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint",
+                    "size": 8
+                },
+                {
+                    "name": "ntfs_id",
+                    "type": "uint",
+                    "size": 16
+                }
+            ],
+            "primary-key": [
+                "id"
+            ]
+        },
+        {
+            "table-name": "tag_noun",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint",
+                    "size": 2
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "size": 20
+                }
+            ],
+            "primary-key": [
+                "id"
+            ]
+        },
+        {
+            "table-name": "tag_item",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint",
+                    "size": 4
+                },
+                {
+                    "name": "contents",
+                    "type": "string",
+                    "size": 60
+                }
+            ],
+            "primary-key": [
+                "id"
+            ]
+        },
+        {
+            "table-name": "rel_tag_noun",
+            "fields": [
+                {
+                    "name": "noun_id",
+                    "type": "uint",
+                    "size": 2,
+                    "foreign-ref": "tag_noun.id"
+                },
+                {
+                    "name": "item_id",
+                    "type": "uint",
+                    "size": 4,
+                    "foreign-ref": "tag_item.id"
+                }
+            ],
+            "primary-key": [
+                "noun_id",
+                "item_id"
+            ]
+        },
+        {
+            "table-name": "rel_tag_file",
+            "fields": [
+                {
+                    "name": "file_id",
+                    "type": "uint",
+                    "size": 8,
+                    "foreign-ref": "fs_file.id"
+                },
+                {
+                    "name": "item_id",
+                    "type": "uint",
+                    "size": 4,
+                    "foreign-ref": "tag_item.id"
+                }
+            ],
+            "primary-key": [
+                "file_id",
+                "item_id"
+            ]
+        }
+    ]
+}
