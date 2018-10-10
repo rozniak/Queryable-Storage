@@ -95,5 +95,8 @@
   <ItemGroup>
     <None Include="Resources\DefaultConfigurations.json" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DefaultSchema.json" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

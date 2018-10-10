@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.ServiceProcess;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -23,6 +25,13 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
         /// Gets the value that indicates whether this connection is disposing or disposed.
         /// </summary>
         public bool Disposing { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the reference to the Windows Service instance that owns this
+        /// <see cref="IDatabaseConnection"/>.
+        /// </summary>
+        public ServiceBase OwnerService { get; set; }
+
 
         /// <summary>
         /// The MYSQL * handle.
@@ -88,9 +97,32 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
 
             // Try to access the database, if it doesn't exist, try to make it now
             //
+            WriteLogEntry(
+                String.Format(
+                    "Switching active database to {0}.",
+                    QueryableStorageDatabaseName
+                    ),
+                EventLogEntryType.Information
+                );
+
             SafeQuery("USE ?n;", QueryableStorageDatabaseName);
 
+            if (LastErrorCode != 0)
+            {
+                // Failure, create the schema now
+                //
 
+            }
+
+            // Log that we're done connecting
+            //
+            WriteLogEntry(
+                String.Format(
+                    "Connection established, using database {0}.",
+                    QueryableStorageDatabaseName
+                    ),
+                EventLogEntryType.Information
+                );
         }
 
 
@@ -109,6 +141,17 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage.Database.Wrappers.MariaDb
         public DatabaseResults Select()
         {
             throw new NotImplementedException();
+        }
+
+
+        /// <summary>
+        /// Writes an entry into Event Viewer via the Windows Service.
+        /// </summary>
+        /// <param name="message">The message to write.</param>
+        /// <param name="entryType">The type of entry to write.</param>
+        internal void WriteLogEntry(string message, EventLogEntryType entryType)
+        {
+            ((ServiceMain)OwnerService)?.WriteLogEntry(message, entryType);
         }
 
 

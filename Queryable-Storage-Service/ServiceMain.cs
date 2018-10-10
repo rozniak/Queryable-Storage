@@ -117,6 +117,8 @@ namespace Oddmatics.PowerUser.Windows.QueryableStorage
                 Configuration[ConfigurationKey.DatabasePassword]
                 );
 
+            DatabaseConnection.OwnerService = this;
+
             // Set up the file system monitor
             //
             WriteLogEntry(
